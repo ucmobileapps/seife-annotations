@@ -1,0 +1,131 @@
+buildscript {
+	repositories {
+		jcenter()
+	}
+}
+
+plugins {
+	id 'maven'
+	id 'maven-publish'
+	id 'java'
+	id 'java-library'
+	id 'com.jfrog.bintray' version "1.7.3"
+}
+
+group = 'com.weebmeister.seife'
+version = '1.6'
+
+ext {
+	artifact = 'seife-annotations'
+}
+
+
+allprojects {
+	repositories {
+		jcenter()
+	}
+}
+
+task getwrapper(type: Wrapper) {
+	gradleVersion = '4.5.1'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+
+// Create the pom configuration:
+def pomConfig = {
+	licenses {
+		license {
+			name "The Apache Software License, Version 2.0"
+			url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+			distribution "repo"
+		}
+	}
+	developers {
+		developer {
+			id "ucmobileapps"
+			name "K. Sausen"
+			email "open-source@uc-mobileapps.com"
+		}
+	}
+
+	scm {
+		url "https://github.com/ucmobileapps/seife-annotations"
+	}
+}
+
+// Create the publication with the pom configuration:
+publishing {
+	publications {
+		MyPublication(MavenPublication) {
+			from components.java
+			artifact sourcesJar
+			artifact javadocJar
+			groupId project.group
+			artifactId "${artifact}"
+			version project.version
+			pom.withXml {
+				def root = asNode()
+				root.appendNode('description', 'Source level annotation to enhance Java business object by additional meta-information for the Seife advanced code generator.')
+				root.appendNode('name', 'Seife Annotations')
+				root.appendNode('url', 'https://uc-mobileapps.com')
+				root.children().last() + pomConfig
+			}
+		}
+	}
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+	user = properties.getProperty("bintray.user")
+	key = properties.getProperty("bintray.apikey")
+	publications = ['MyPublication']
+	
+	dryRun = false 		// Whether to run this as dry-run, without deploying
+	publish = false 	// Whether version should be auto published after an upload
+	override = false 	// Whether to override version artifacts already published
+
+	pkg {
+		repo = 'seife-annotations'
+		name = "${artifact}"
+		userOrg = 'ucmobileapps'
+		licenses = ['Apache-2.0']
+
+		websiteUrl = 'https://uc-mobileapps.com/seife-annotation-processor/'
+		issueTrackerUrl = 'https://github.com/ucmobileapps/seife-annotations/issues'
+		vcsUrl = 'https://github.com/ucmobileapps/seife-annotations.git'
+
+		version {
+			name = project.version
+			desc = 'Seife Annotations'
+			released  = new Date()
+			vcsTag = project.version
+			// attributes = []
+			gpg {
+				sign = true
+				// passphrase = '' 
+			}
+		}
+	}
+}
+
+dependencies {
+
+}
+
+

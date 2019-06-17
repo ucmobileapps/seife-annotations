@@ -1,0 +1,8 @@
+/target/
+/local.properties
+/build/
+/.gradle/
+/gradle/
+/gradlew
+/gradlew.bat
+/.project
